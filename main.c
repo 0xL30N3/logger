@@ -1,4 +1,5 @@
 #include <libevdev/libevdev.h>
+#include <stdbool.h>
 #include <linux/input.h>
 #include <fcntl.h>
 #include <string.h>
@@ -65,5 +66,20 @@ int main(){
     printf("no kb\n");
   }else{
     printf("Keybord: %s\n", kb_path);
+  }
+
+  //open up the kb input event file
+  int fd = open(kb_path, O_RDONLY);
+
+  //buffer to read input events
+  struct input_event event;
+
+
+  //main logger loop
+  while (true) {
+    read(fd, &event, sizeof(struct input_event));
+    if(event.type == EV_KEY){
+      printf("code: %d\tvalue: %d\n", event.code, event.value);
+    }
   }
 }

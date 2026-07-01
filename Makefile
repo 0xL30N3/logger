@@ -6,7 +6,7 @@ CXXFLAGS = -Wall -g $(INCLUDES)
 all: loggerd
 
 loggerd: main.c
-	$(CXX) $(CXXFLAGS) $(LIBRARIES) -o loggerd main.c
+	$(CXX) $(CXXFLAGS) -o loggerd main.c $(LIBRARIES) 
 
 clean:
 	rm -f loggerd *.o
