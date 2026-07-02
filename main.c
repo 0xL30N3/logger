@@ -91,7 +91,7 @@ static const char shift_table[256] = {
   [KEY_SLASH] = '?', 
 };
 
-char* get_kb(char* buf, size_t buf_size){
+int get_kb(char list[20][PATH_MAX], int list_size){
   struct libevdev *dev;
   struct dirent *de;
   DIR *dr = opendir("/dev/input");
@@ -102,10 +102,13 @@ char* get_kb(char* buf, size_t buf_size){
   }
 
 
+  int i = 0;
+
   while ((de = readdir(dr)) != NULL) {
     if(strstr(de->d_name, "event") != NULL){
+      char buf[PATH_MAX];
       //get real path of the input file
-      snprintf(buf, buf_size, "/dev/input/%s", de->d_name);
+      snprintf(buf, PATH_MAX, "/dev/input/%s", de->d_name);
 
       //open the input file stream first
       int fd = open(buf, O_RDONLY|O_NONBLOCK);
@@ -128,29 +131,31 @@ char* get_kb(char* buf, size_t buf_size){
         printf("vendor: %x product: %x\n",
               libevdev_get_id_vendor(dev),
               libevdev_get_id_product(dev));
-        //returns first keyboard found
-        return buf;
+        //add to list of keyboards found
+        strcpy(list[i], buf);
+        i++;
       }
-            
+
       //shutdown
       libevdev_free(dev);
       close(fd);
     }
   }
-  //no kb
-  return NULL;
+  closedir(dr);
+  return i;
 }
 
 
-int main(){
-  char path[PATH_MAX];
-  const char* kb_path = get_kb(path, sizeof(path));
-  if(kb_path == NULL){
-    printf("no kb\n");
-  }else{
-    printf("Keyboard: %s\n", kb_path);
-  }
 
+int main(){
+  char list[20][PATH_MAX];
+  int list_size = sizeof(list)/sizeof(list[0]);
+  int size = get_kb(list, list_size);
+
+  for(int i = 0; i < size; i++){
+    printf("Keyboard: %s\n", list[i]);
+  }
+  /*
   //open up the kb input event file
   int fd = open(kb_path, O_RDONLY);
 
@@ -210,4 +215,5 @@ int main(){
   // Close the file
   close(fd);
   fclose(fptr); 
+  */
 }
