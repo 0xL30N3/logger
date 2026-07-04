@@ -1,12 +1,12 @@
-CXX = gcc
-LIBRARIES := -levdev -lpthread
+CC = gcc
+LDLIBS := -levdev -lpthread
 INCLUDES := -I/usr/include/libevdev-1.0
-CXXFLAGS = -Wall -g $(INCLUDES)
+CFLAGS = -Wall -g $(INCLUDES)
 
 all: loggerd
 
 loggerd: main.c
-	$(CXX) $(CXXFLAGS) -o loggerd main.c $(LIBRARIES) 
+	$(CC) $(CFLAGS) -o loggerd main.c $(LDLIBS) 
 
 clean:
 	rm -f loggerd *.o
