@@ -1,2 +1,3 @@
-### systemd-loggerd
-Extremely simple keylogger with no extra features.
+systemd-loggerd - extremely simple keylogger
+============================================
+logger is an extremely simple keylogger written in c that logs evdev keyboards.
